@@ -1,7 +1,10 @@
 # AI Article Summarizer
 
-<img style="width:100%; height:auto" src="https://github.com/user-attachments/assets/7b2d6fd8-22b8-4927-8cda-cd355c503106" />
-<img style="width:100%; height:auto" src="https://github.com/user-attachments/assets/e3ffb66e-8fcf-496f-a11c-4dd3dee55493" />
+<img style="width:100%; height:auto" src="https://github.com/user-attachments/assets/39e021f2-4e86-46da-af89-3d857058cdd5" />
+<img style="width:100%; height:auto" src="https://github.com/user-attachments/assets/0a143195-6061-4216-becf-955e44700fb1" />
+<img style="width:100%; height:auto" src="https://github.com/user-attachments/assets/60ec43a0-7ae5-4082-b110-c067f2a5f92b" />
+<img style="width:100%; height:auto" src="https://github.com/user-attachments/assets/8d54f228-726f-4b3d-a5c9-292fc1e9bdfe" />
+
 
 A modern, responsive web application that uses Google Gemini AI to summarize articles and text content with multiple output styles and advanced features.
 
