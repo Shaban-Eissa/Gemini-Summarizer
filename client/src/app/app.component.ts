@@ -8,7 +8,9 @@ import { SummaryCardComponent } from './components/summary-card.component';
 import { HeaderBarComponent } from './components/header-bar.component';
 import { FooterBarComponent } from './components/footer-bar.component';
 import { SummaryService, SummaryRecord } from './services/summary.service';
-import { AppFacade } from './services/app.facade';
+import { InputFacade } from './services/facades/input.facade';
+import { GenerationFacade } from './services/facades/generation.facade';
+import { UiFacade } from './services/facades/ui.facade';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -28,27 +30,28 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './app.component.css',
 })
 export class AppComponent {
-  private readonly facade = inject(AppFacade);
-  summary = inject(SummaryService); // kept to preserve template usage of summary.summaries()
+  private readonly input = inject(InputFacade);
+  private readonly generation = inject(GenerationFacade);
+  private readonly ui = inject(UiFacade);
+  summary = inject(SummaryService);
 
-  // Expose facade signals to preserve current template API (signal-as-function usage)
-  text = this.facade.text;
-  url = this.facade.url;
-  style = this.facade.style;
-  styleOptions = this.facade.styleOptions;
-  loading = this.facade.loading;
-  loadingText = this.facade.loadingText;
-  loadingProgress = this.facade.loadingProgress;
-  result = this.facade.result;
-  toastMessage = this.facade.toastMessage;
-  keywords = this.facade.keywords;
-  paletteOpen = this.facade.paletteOpen;
-  paletteQuery = this.facade.paletteQuery;
-  modalOpen = this.facade.modalOpen;
-  modalItem = this.facade.modalItem;
+  text = this.input.text;
+  url = this.input.url;
+  style = this.input.style;
+  styleOptions = this.input.styleOptions;
+  loading = this.generation.loading;
+  loadingText = this.generation.loadingText;
+  loadingProgress = this.generation.loadingProgress;
+  result = this.generation.result;
+  toastMessage = this.ui.toastMessage;
+  keywords = this.generation.keywords;
+  paletteOpen = this.ui.paletteOpen;
+  paletteQuery = this.ui.paletteQuery;
+  modalOpen = this.ui.modalOpen;
+  modalItem = this.ui.modalItem;
 
   constructor() {
-    // history is preloaded by facade's constructor; keep hotkey here
+    this.summary.getHistory();
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       const isMac = navigator.platform.toLowerCase().includes('mac');
       if ((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -60,36 +63,36 @@ export class AppComponent {
   }
 
   async generate() {
-    return this.facade.generate();
+    return this.generation.generate();
   }
 
   async copySummary() {
-    return this.facade.copySummary();
+    return this.ui.copySummary();
   }
 
   openSummaryModal(item: SummaryRecord) {
-    this.facade.openSummaryModal(item);
+    this.ui.openSummaryModal(item);
   }
 
   closeSummaryModal() {
-    this.facade.closeSummaryModal();
+    this.ui.closeSummaryModal();
   }
 
   renderedSummary() {
-    return this.facade.renderedSummary();
+    return this.generation.renderedSummary();
   }
 
   openPalette() {
-    this.facade.openPalette();
+    this.ui.openPalette();
   }
   closePalette() {
-    this.facade.closePalette();
+    this.ui.closePalette();
   }
   selectPaletteAction(action: string) {
-    this.facade.selectPaletteAction(action);
+    this.ui.selectPaletteAction(action);
   }
 
   async rephrase(tone: 'formal' | 'casual' | 'tweet' | 'detailed') {
-    return this.facade.rephrase(tone);
+    return this.generation.rephrase(tone);
   }
 }

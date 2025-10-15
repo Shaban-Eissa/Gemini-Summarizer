@@ -1,35 +1,17 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { SummaryService, SummaryRecord } from './summary.service';
+import { SummaryService, SummaryRecord } from '../summary.service';
+import { InputFacade } from './input.facade';
 
 @Injectable({ providedIn: 'root' })
-export class AppFacade {
-  // Public state signals
-  text = signal('');
-  url = signal('');
-  style = signal('short');
-  styleOptions = [
-    { value: 'short', label: 'Short' },
-    { value: 'detailed', label: 'Detailed' },
-    { value: 'bullet', label: 'Bullet Points' },
-    { value: 'casual', label: 'Casual (friendly tone)' },
-  ];
+export class GenerationFacade {
   loading = signal(false);
   loadingText = signal('');
   loadingProgress = signal(0);
   result = signal<any>(null);
-  toastMessage = signal<string | null>(null);
   keywords = signal<string[]>([]);
-  paletteOpen = signal(false);
-  paletteQuery = signal('');
-  modalOpen = signal(false);
-  modalItem = signal<SummaryRecord | null>(null);
 
   private readonly summary = inject(SummaryService);
-
-  constructor() {
-    // Preload history on app start
-    this.summary.getHistory();
-  }
+  private readonly input = inject(InputFacade);
 
   async generate() {
     this.loading.set(true);
@@ -39,15 +21,13 @@ export class AppFacade {
     try {
       progressTimer = setInterval(() => {
         const current = this.loadingProgress();
-        if (current < 90) {
-          this.loadingProgress.set(current + 2);
-        }
+        if (current < 90) this.loadingProgress.set(current + 2);
       }, 200);
     } catch {}
     const res: SummaryRecord = await this.summary.summarize({
-      text: this.text(),
-      url: this.url(),
-      style: this.style(),
+      text: this.input.text(),
+      url: this.input.url(),
+      style: this.input.style(),
     });
     this.result.set(res);
     try {
@@ -74,23 +54,6 @@ export class AppFacade {
     }, 250);
   }
 
-  async copySummary() {
-    const summaryText = this.result()?.summary || '';
-    if (!summaryText) return;
-    await navigator.clipboard.writeText(summaryText);
-    this.showToast('Summary copied to clipboard');
-  }
-
-  openSummaryModal(item: SummaryRecord) {
-    this.modalItem.set(item);
-    this.modalOpen.set(true);
-  }
-
-  closeSummaryModal() {
-    this.modalOpen.set(false);
-    this.modalItem.set(null);
-  }
-
   renderedSummary() {
     const text = (this.result()?.summary || '').toString();
     return this.basicMarkdownToHtml(text);
@@ -103,67 +66,12 @@ export class AppFacade {
     this.loadingText.set(`Rephrasing (${tone})…`);
     try {
       const out = (await this.summary.rephrase({ text: base, tone })) as any;
-      if (out?.rephrased) {
+      if (out?.rephrased)
         this.result.set({ ...this.result(), summary: out.rephrased });
-        this.showToast('Rephrased');
-      }
     } finally {
       this.loading.set(false);
       this.loadingText.set('');
     }
-  }
-
-  openPalette() {
-    this.paletteOpen.set(true);
-    this.paletteQuery.set('');
-  }
-  closePalette() {
-    this.paletteOpen.set(false);
-  }
-  selectPaletteAction(action: string) {
-    switch (action) {
-      case 'summarize':
-        if (this.url()?.trim() || this.text()?.trim()) {
-          this.generate();
-        } else {
-          this.showToast('Please enter a URL or text to summarize');
-        }
-        break;
-      case 'rephrase-formal':
-        if (this.result()?.summary) {
-          this.rephrase('formal');
-        } else {
-          this.showToast('Please generate a summary first');
-        }
-        break;
-      case 'rephrase-casual':
-        if (this.result()?.summary) {
-          this.rephrase('casual');
-        } else {
-          this.showToast('Please generate a summary first');
-        }
-        break;
-      case 'rephrase-tweet':
-        if (this.result()?.summary) {
-          this.rephrase('tweet');
-        } else {
-          this.showToast('Please generate a summary first');
-        }
-        break;
-      case 'history':
-        window.scrollTo({
-          top: document.body.scrollHeight,
-          behavior: 'smooth',
-        });
-        break;
-    }
-    this.closePalette();
-  }
-
-  // Helpers
-  private showToast(message: string) {
-    this.toastMessage.set(message);
-    setTimeout(() => this.toastMessage.set(null), 1800);
   }
 
   private escapeHtml(input: string) {
@@ -172,7 +80,6 @@ export class AppFacade {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
   }
-
   private basicMarkdownToHtml(input: string) {
     const escaped = this.escapeHtml(input);
     const lines = escaped.split(/\r?\n/);
